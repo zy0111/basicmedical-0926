@@ -11,11 +11,13 @@ from linebot.models import (
 )
 
 app = Flask(__name__)
+
 line_bot_api = LineBotApi('R3U/Zs0GeNBvT7MR8jlyeF1vhNoKsV2XBkvYzFHXl5KR3D5dKwkeiCKkf0yb3POlajr0S5/PWGKogr+Wm/BASb3WiNsEHwdZtpE6j+gpg+GcmmtlBiV5UaTFbPsw43MuftA8kBObdICifwhqD2U/TwdB04t89/1O/w1cDnyilFU=')
 handler = WebhookHandler('7875c1b46b912baf8c35a18ff87af40f')
 
 # 推給你自己 
-line_bot_api.push_message('Uf291503081179f3838f2cc820682e27d ', TextSendMessage(text='(後臺訊息)啟動豆芽探索共學ECHO機器人!'))
+line_bot_api.push_message('
+Uf291503081179f3838f2cc820682e27d', TextSendMessage(text='(後臺訊息)啟動豆芽探索共學ECHO機器人!'))
 
 # 推給某個User
 # line_bot_api.push_message('UserID', TextSendMessage(text='(後臺訊息)啟動豆芽探索共學ECHO機器人!'))
@@ -42,9 +44,34 @@ def callback():
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-    line_bot_api.reply_message(
-        event.reply_token,
-        TextSendMessage(text=event.message.text))
+      # get user id when reply
+    user_id = event.source.user_id
+    print("user_id =", user_id)
+    
+    reply_msg = event.message.text+'\nyour User ID is '+user_id+\
+                    ' \n輸入「你好」會啟動reply_message回復「不錯喔」，\
+                    \n輸入「發訊息給我」會啟動push_message由機器人主動發訊息給使用者，\
+                    \n輸入「我是誰」會調用get_profile取得身分並回覆使用者訊息'
+    
+    if event.message.text=='你好':
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(text='不錯喔'))
+    if event.message.text=='發訊息給我':
+        line_bot_api.push_message(
+           user_id,
+           TextSendMessage(text='這個訊息是基於ID主動發出的(push_message)'))
+    if event.message.text=='我是誰':
+        profile = line_bot_api.get_profile(user_id)
+        msg_ = '你的帳號是: '+ profile.display_name + '\n你的ID是: '+profile.user_id+'\n你的大頭貼網址是: '\
+                    +profile.picture_url+'\n你的使用者自介內容是: '+profile.status_message
+        line_bot_api.push_message(
+             user_id,
+             TextSendMessage(text=msg_))
+    else:
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(text=reply_msg))
 
 import os
 if __name__ == "__main__":
